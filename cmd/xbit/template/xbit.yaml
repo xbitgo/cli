@@ -1,0 +1,3 @@
+project_name: {{ProjectName}}
+database:
+  test: root:@tcp(localhost:3306)/test
