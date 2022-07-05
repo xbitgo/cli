@@ -121,6 +121,13 @@ CMD ["./start"]
 // todo 根据实际情况配置
 `
 
+const ApiTestHttpTmpl = `POST http://localhost:9901/api/{{.ServiceName}}/test
+Content-Type: application/json
+
+{}
+
+###`
+
 const AppMainTmpl = `package main
 
 import (
@@ -320,6 +327,18 @@ func (s *App) ConfRpcRegister() ([]byte, error) {
 func (s *App) Dockerfile() ([]byte, error) {
 	buf := new(bytes.Buffer)
 	tmpl, err := template.New("app.Dockerfile").Parse(AppDockerTmpl)
+	if err != nil {
+		return nil, err
+	}
+	if err := tmpl.Execute(buf, s); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func (s *App) ApiTestHttp() ([]byte, error) {
+	buf := new(bytes.Buffer)
+	tmpl, err := template.New("app.ApiTestHttp").Parse(ApiTestHttpTmpl)
 	if err != nil {
 		return nil, err
 	}

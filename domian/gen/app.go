@@ -58,6 +58,11 @@ func (m *Manager) App(rootPath string, name string) error {
 			fun:  appGen.Dockerfile,
 		},
 		{
+			dir:  appPath,
+			name: "api_test.http",
+			fun:  appGen.ApiTestHttp,
+		},
+		{
 			dir:  tmpl.ConfDir,
 			name: "config.go",
 			fun:  appGen.Conf,
