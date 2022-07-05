@@ -2,8 +2,10 @@ package server
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
+	"net"
 	"os"
+
+	"github.com/gin-gonic/gin"
 )
 
 type httpSvc struct {
@@ -15,12 +17,25 @@ func (s *httpSvc) Type() string {
 	return "http"
 }
 
+func (s *httpSvc) StartAddr() string {
+	addr, err := net.ResolveTCPAddr("", s.Addr)
+	if err != nil {
+		panic(err)
+	}
+	return ExposedAddr(addr).String()
+}
+
 func (s *httpSvc) Start() error {
 	fmt.Printf(" -- starting http server: [%s] ... \n", s.Addr)
 	return s.Engine.Run(s.Addr)
 }
 
-func (a *App) InitHTTP(addr string, process func(r *gin.Engine)) {
+func (s *httpSvc) Stop() {
+
+}
+
+func (a *App) InitHTTP(process func(r *gin.Engine)) {
+	addr := a.cfg.HTTPAddr
 	if addr == "" {
 		return
 	}
@@ -28,8 +43,8 @@ func (a *App) InitHTTP(addr string, process func(r *gin.Engine)) {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.Default()
 	process(engine)
-	a.httpSvc = &httpSvc{
+	a.svcList = append(a.svcList, &httpSvc{
 		Engine: engine,
 		Addr:   addr,
-	}
+	})
 }

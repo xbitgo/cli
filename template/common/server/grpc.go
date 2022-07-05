@@ -39,12 +39,21 @@ func (s *grpcSvc) Type() string {
 	return "grpc"
 }
 
+func (s *grpcSvc) StartAddr() string {
+	return ExposedAddr(s.Listener.Addr()).String()
+}
+
 func (s *grpcSvc) Start() error {
 	fmt.Printf(" -- starting grpc server: [%s] ... \n", s.Listener.Addr())
 	return s.svc.Serve(s.Listener)
 }
 
-func (a *App) InitGRPC(addr string, process func(grpcService grpc.ServiceRegistrar), opts ...grpc.UnaryServerInterceptor) {
+func (s *grpcSvc) Stop() {
+	s.svc.GracefulStop()
+}
+
+func (a *App) InitGRPC(process func(grpcService grpc.ServiceRegistrar), opts ...grpc.UnaryServerInterceptor) {
+	addr := a.cfg.GRPCAddr
 	if addr == "" {
 		return
 	}
@@ -61,11 +70,10 @@ func (a *App) InitGRPC(addr string, process func(grpcService grpc.ServiceRegistr
 		)),
 	}
 	grpcServer := grpc.NewServer(grpcOptions...)
-	defer grpcServer.GracefulStop()
 	process(grpcServer)
-	a.grpcSvc = &grpcSvc{
+	a.svcList = append(a.svcList, &grpcSvc{
 		Listener: lis,
 		svc:      grpcServer,
-	}
+	})
 	return
 }

@@ -3,52 +3,65 @@ package server
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 	"os/signal"
+	"reflect"
+	"strings"
 	"syscall"
 
+	"github.com/xbitgo/core/log"
+	etcdv3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/xbitgo/core/log"
+	"{{ProjectName}}/common/cfg"
 )
 
 type Svc interface {
 	Start() error
+	Stop()
+	StartAddr() string
 	Type() string
 }
 
 type App struct {
-	grpcSvc *grpcSvc
-	httpSvc *httpSvc
-	//taskSvc    *taskSvc
+	cfg        *cfg.Server
+	svcList    []Svc
 	closeFunc  func()
 	cancelFunc context.CancelFunc
 }
 
-func NewApp() *App {
-	return &App{}
+func NewApp(cfg *cfg.Server) *App {
+	return &App{
+		cfg:     cfg,
+		svcList: make([]Svc, 0),
+	}
 }
 
-func (a *App) Start() error {
+func (a *App) Start(etcd *etcdv3.Client) error {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	group, ctx := errgroup.WithContext(ctx)
 	a.cancelFunc = cancelFunc
-	if a.grpcSvc != nil {
+
+	for _, svc := range a.svcList {
+		_svc := svc
 		group.Go(func() error {
-			if err := a.grpcSvc.Start(); err != nil {
-				return fmt.Errorf("starting grpc server, err: %s", err)
+			if err := _svc.Start(); err != nil {
+				log.Panicf("starting %s server, err: %s", _svc.Type(), err)
+				panic(err)
+			}
+			return nil
+		})
+		group.Go(func() error {
+			addrName := fmt.Sprintf("%s/%s", a.cfg.AddrName, _svc.Type())
+			if err := register(etcd, ctx, addrName, _svc.StartAddr()); err != nil {
+				log.Panicf("register %s server, err: %s", _svc.Type(), err)
+				panic(err)
 			}
 			return nil
 		})
 	}
-	if a.httpSvc != nil {
-		group.Go(func() error {
-			if err := a.httpSvc.Start(); err != nil {
-				return fmt.Errorf("starting http server, err: %s", err)
-			}
-			return nil
-		})
-	}
+
 	go a.signalExit()
 	return group.Wait()
 }
@@ -77,33 +90,50 @@ func (a *App) signalExit() {
 	}
 }
 
-//func (a *App) StartEtcd(etcdAddr string, etcd *etcdv3.Client) error {
-//	if etcd == nil {
-//		return errors.New("etcd client err")
-//	}
-//	etcdGRPCAddr := fmt.Sprintf("%s_grpc", etcdAddr)
-//	etcdHTTPAddr := fmt.Sprintf("%s_http", etcdAddr)
-//
-//	if a.grpcSvc != nil {
-//		err := a.grpcSvc.Start()
-//		if err != nil {
-//			return err
-//		}
-//	}
-//
-//	////
-//	//if server.GRPCAddr != "" {
-//	//	lis, err := net.Listen("tcp", server.GRPCAddr)
-//	//	if err != nil {
-//	//		log.Errorf("tcp listening on addr: %s, err: %v", server.GRPCAddr, err)
-//	//	}
-//	//	grpcServer := grpc.NewServer(grpcOptions...)
-//	//	defer grpcServer.GracefulStop()
-//	//	pb.RegisterLocationServiceServer(grpcServer, loc)
-//	//}
-//	//if server.HTTPAddr != "" {
-//	//
-//	//}
-//
-//	return nil
-//}
+func ExposedAddr(addr net.Addr) net.Addr {
+	tcpAddr, ok := addr.(*net.TCPAddr)
+	if !ok {
+		return addr
+	}
+	if !tcpAddr.IP.IsUnspecified() {
+		return addr
+	}
+	_, err := os.Hostname()
+	if err != nil {
+		log.Errorf("ServiceRegistry convertTcpAddr Hostname fail, err:%s", err)
+		return addr
+	}
+	ips := make([]net.IP, 0)
+	interfaceAddrs, err := net.InterfaceAddrs()
+	if err != nil {
+		log.Errorf("ServiceRegistry convertTcpAddr InterfaceAddrs fail, err:%s", err)
+		return addr
+	}
+	ips = make([]net.IP, 0)
+	for _, addr := range interfaceAddrs {
+		if ipAddr, ok := addr.(*net.IPNet); ok {
+			ips = append(ips, ipAddr.IP)
+		} else {
+			log.Debugf("bot ip addr addr:[%s], type:[%s]", addr, reflect.TypeOf(addr))
+		}
+	}
+	found := false
+	for _, ip := range ips {
+		if ip.IsUnspecified() || ip.IsLoopback() {
+			continue
+		}
+		if !strings.HasPrefix(ip.String(), "10.") &&
+			!strings.HasPrefix(ip.String(), "192.168.") &&
+			!strings.HasPrefix(ip.String(), "172.") {
+			continue
+		}
+		tcpAddr.IP = ip
+		found = true
+		break
+	}
+	if !found {
+		log.Errorf("ServiceRegistry convertTcpAddr LookupIP no suitable ip found, host:%s", ips)
+		return addr
+	}
+	return tcpAddr
+}

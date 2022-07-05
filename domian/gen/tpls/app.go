@@ -77,7 +77,7 @@ const AppConfigTmplRpcRegisterImpl = `package conf
 
 // RegisterRPCClients 注册Rpc客户端
 func RegisterRPCClients() {
-	//rpc_client.RegisterRPC(conf.Namespace,clients.User) // 在这里注册依赖的其他服务 注册后 代码中可以直接使用
+	//rpc_client.RegisterRPC(conf.Namespace, conf.App.GetEtcd(), rpc_client.User) // 在这里注册依赖的其他服务 注册后 代码中可以直接使用
 }`
 
 const AppConfigTmpl = `package conf
@@ -159,33 +159,33 @@ func main() {
 	// handler层代理
 	handlerProxy := entry.New{{.ServiceNameUF}}Handler()
     // 创建服务
-    app := server.NewApp()
-    // grpc server
-    app.InitGRPC(conf.App.Server.GRPCAddr, func(grpcService grpc.ServiceRegistrar) {
-        pb.Register{{.ServiceNameUF}}Server(grpcService, handlerProxy)
-    }, tracing.GrpcServerTrace())
-    // http server
-    app.InitHTTP(conf.App.Server.HTTPAddr, func(r *gin.Engine) {
-        // 可选 全局中间件
-        // r.Use(middleware.HTTPCors())
-        // 可选 全局路由
-        // r.OPTIONS("/*wild", func(c *gin.Context) {
-        //	return
-        // })
-        // 必须；解析参数可以定制
-        r.Use(middleware.HTTPParams())
-        {
-            entry.{{.ServiceNameUF}}HttpInit(r, handlerProxy)
-        }
-    })
-    // 服务停止前处理
-    app.OnClose(func() {
-        // something close ...
-    })
-    err := app.Start()
-    if err != nil {
-        panic(err)
-    }
+	app := server.NewApp(conf.App.Server)
+	// grpc server
+	app.InitGRPC(func(grpcService grpc.ServiceRegistrar) {
+		pb.Register{{.ServiceNameUF}}Server(grpcService, handlerProxy)
+	}, tracing.GrpcServerTrace())
+	// http server
+	app.InitHTTP(func(r *gin.Engine) {
+		// 可选 全局中间件
+		// r.Use(middleware.HTTPCors())
+		// 可选 全局路由
+		// r.OPTIONS("/*wild", func(c *gin.Context) {
+		//	return
+		// })
+		// 必须；解析参数可以定制
+		r.Use(middleware.HTTPParams())
+		{
+			entry.{{.ServiceNameUF}}HttpInit(r, handlerProxy)
+		}
+	})
+	// 服务停止前处理
+	app.OnClose(func() {
+		// something close ...
+	})
+	err := app.Start(conf.App.GetEtcd())
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Init()  {
@@ -216,7 +216,8 @@ const AppCfgFileTmpl = `name: {{.ServiceName}}
 env: local
 server:
   http_addr: "0.0.0.0:9901"
-  grpc_addr: "0.0.0.0:9902"
+  grpc_addr: "0.0.0.0:0"
+  addr_name: "/{{.ProjectName}}/app/{{.ServiceName}}"
 tracing:
   service_name: "{{.ServiceName}}"
   sampler_type: "const"

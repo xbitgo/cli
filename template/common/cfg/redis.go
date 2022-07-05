@@ -15,7 +15,6 @@ type Redis struct {
 }
 
 func (r *Redis) CreateInstance() (*redis.Client, error) {
-	fmt.Println(r.Addr)
 	cli := redis.NewClient(&redis.Options{
 		Addr:     r.Addr,
 		Password: r.Password,
