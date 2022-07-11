@@ -109,16 +109,20 @@ func Init() {
     _dIRegister()
 }`
 
-const AppDockerTmpl = `FROM frolvlad/alpine-glibc:glibc-2.34
-
-COPY ./start /opt/start
-
+const AppDockerTmpl = `FROM golang:1.17-stretch as build
+WORKDIR /go/src/xbitgo
+COPY . ./
+WORKDIR apps/{{.ServiceName}}
+ENV GOPROXY="https://goproxy.cn"
+RUN go mod download
+RUN go build -o {{.ServiceName}}_server
+FROM alpine:3.16
+COPY --from=build /go/src/xbitgo/apps/{{.ServiceName}}/{{.ServiceName}}_server  /opt
+COPY --from=build /go/src/xbitgo/apps/{{.ServiceName}}/config.yaml  /opt
+RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
 ENV SERVICE_NAME="{{.ServiceName}}_server"
-
 WORKDIR /opt
-
-CMD ["./start"]
-// todo 根据实际情况配置
+CMD ["./{{.ServiceName}}_server"]
 `
 
 const ApiTestHttpTmpl = `POST http://localhost:9901/api/{{.ServiceName}}/test
