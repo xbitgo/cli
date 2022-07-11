@@ -40,19 +40,19 @@ import (
 	"github.com/xbitgo/components/filterx"
 )
 
-// @IMPL[repo.{{.EntityName}}epo] @DI
-type {{.EntityName}}Impl struct {
+// @IMPL[repo.{{.EntityName}}Repo] @DI
+type {{.EntityName}}RepoImpl struct {
 	DB  *database.Database ` + "`" + `di:"conf.DB"` + "`" + `
 	Dao *dao.{{.EntityName}}Dao
 }
 
-func New{{.EntityName}}Impl() *{{.EntityName}}Impl {
+func New{{.EntityName}}RepoImpl() *{{.EntityName}}RepoImpl {
 	return &{{.EntityName}}Impl{
 		Dao: dao.New{{.EntityName}}Dao(),
 	}
 }
 
-func (impl *{{.EntityName}}Impl) Get(ctx context.Context, id int64) (*entity.{{.EntityName}}, error) {
+func (impl *{{.EntityName}}RepoImpl) Get(ctx context.Context, id int64) (*entity.{{.EntityName}}, error) {
 	session := impl.DB.NewSession(ctx)
 	_do, err := impl.Dao.GetById(session, id)
 	if err != nil {
@@ -61,7 +61,7 @@ func (impl *{{.EntityName}}Impl) Get(ctx context.Context, id int64) (*entity.{{.
 	return converter.To{{.EntityName}}Entity(_do), nil
 }
 
-func (impl *{{.EntityName}}Impl) Query(ctx context.Context, query filterx.FilteringList, pg *filterx.Page) (entity.{{.EntityName}}List, int, error) {
+func (impl *{{.EntityName}}RepoImpl) Query(ctx context.Context, query filterx.FilteringList, pg *filterx.Page) (entity.{{.EntityName}}List, int, error) {
 	session := impl.DB.NewSession(ctx)
 	session, err := query.GormOption(session)
 	if err != nil {
@@ -83,7 +83,7 @@ func (impl *{{.EntityName}}Impl) Query(ctx context.Context, query filterx.Filter
 	return converter.To{{.EntityName}}List(doList), count, nil
 }
 
-func (impl *{{.EntityName}}Impl) Create(ctx context.Context, input *entity.{{.EntityName}}) (*entity.{{.EntityName}}, error) {
+func (impl *{{.EntityName}}RepoImpl) Create(ctx context.Context, input *entity.{{.EntityName}}) (*entity.{{.EntityName}}, error) {
 	session := impl.DB.NewSession(ctx)
 	_do := converter.From{{.EntityName}}Entity(input)
 	err := impl.Dao.Create(session, _do)
@@ -91,84 +91,25 @@ func (impl *{{.EntityName}}Impl) Create(ctx context.Context, input *entity.{{.En
 		return nil, err
 	}
 	output := converter.To{{.EntityName}}Entity(_do)
-	// 注册回滚操作
-	dtx.Register(ctx, func() error {
-		return impl.rollbackCreate(ctx, _do.ID)
-	}, nil)
 	return output, err
 }
 
-func (impl *{{.EntityName}}Impl) rollbackCreate(ctx context.Context, id int64) error {
-	session := impl.DB.NewSession(ctx)
-	session = session.Where("id = ?", id)
-	// 执行补偿回滚
-	return impl.Dao.Delete(session)
-}
-
-func (impl *{{.EntityName}}Impl) UpdateById(ctx context.Context, updates dtx.SetItemList, id int64) error {
+func (impl *{{.EntityName}}RepoImpl) UpdateById(ctx context.Context, updates dtx.SetItemList, id int64) error {
 	_updates, err := updates.ToGormUpdates()
 	if err != nil {
 		return err
 	}
-	// 查询老的数据
-	_old, err := impl.Get(ctx, id)
-	if err != nil {
-		return err
-	}
 	session := impl.DB.NewSession(ctx)
 	err = impl.Dao.UpdateById(session, _updates, id)
 	if err != nil {
 		return err
 	}
-	// 注册回滚操作
-	dtx.Register(ctx, func() error {
-		return impl.rollbackUpdateById(ctx, updates, id, _old)
-	}, nil)
 	return err
 }
 
-func (impl *{{.EntityName}}Impl) rollbackUpdateById(ctx context.Context, updates dtx.SetItemList, id int64, _old *entity.{{.EntityName}}) error {
-	_oldMap := _old.ToTagMap("db")
-	sets := make(map[string]interface{})
-	for _, update := range updates {
-		if update.Operator == dtx.SET {
-			sets[update.Field] = _oldMap[update.Field]
-		}
-	}
-	session := impl.DB.NewSession(ctx)
-	// 生成rollback updates
-	_updates, err := updates.RollbackGormUpdates(sets)
-	if err != nil {
-		return err
-	}
-	// 执行补偿回滚
-	err = impl.Dao.UpdateById(session, _updates, id)
-	return err
-}
-
-func (impl *{{.EntityName}}Impl) DeleteById(ctx context.Context, id int64) error {
-	// 查询老的数据
-	_old, err := impl.Get(ctx, id)
-	if err != nil {
-		return err
-	}
+func (impl *{{.EntityName}}RepoImpl) DeleteById(ctx context.Context, id int64) error {
 	session := impl.DB.NewSession(ctx)
 	err = impl.Dao.DeleteById(session, id)
-	if err != nil {
-		return err
-	}
-	// 注册回滚操作
-	dtx.Register(ctx, func() error {
-		return impl.rollbackDeleteById(ctx, _old)
-	}, nil)
-	return err
-}
-
-func (impl *{{.EntityName}}Impl) rollbackDeleteById(ctx context.Context, _old *entity.{{.EntityName}}) error {
-	session := impl.DB.NewSession(ctx)
-	_do := converter.From{{.EntityName}}Entity(_old)
-	// 执行补偿回滚
-	err := impl.Dao.Create(session, _do)
 	if err != nil {
 		return err
 	}

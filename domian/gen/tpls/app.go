@@ -31,6 +31,7 @@ func UnitTestingInit() {
 			Timeout:   5,
 		},
 		DB: &cfg.DB{
+			Type:            "mysql",
 			DSN:             "root:@tcp(localhost:3306)/test?charset=utf8mb4&interpolateParams=true&parseTime=true&loc=Local",
 			MaxOpenConn:     10,
 			MaxIdleConn:     10,
@@ -61,7 +62,6 @@ import (
 // CustomInit 业务自定义配置
 func CustomInit() {
 	// JSON配置
-	binding.EnableDecoderUseNumber = true
 	extra.RegisterFuzzyDecoders()
 
 	// 链路追踪配置
@@ -166,6 +166,8 @@ func main() {
 	}, tracing.GrpcServerTrace())
 	// http server
 	app.InitHTTP(func(r *gin.Engine) {
+		// 可选 配置int64自动转string用于web兼容
+		// http_io.WithInt64ToStringCodec()
 		// 可选 全局中间件
 		// r.Use(middleware.HTTPCors())
 		// 可选 全局路由
@@ -196,7 +198,7 @@ func Init()  {
 	// 分布式ID生成器初始化
 	sequence.Init()
 	// 分布式事务管理器初始化
-	dtx.Init(nil, 0) // 需要配置mq开启跨服务
+	dtx.Init(conf.Namespace, conf.App.GetRedis(), 100) 
 	// 注册rpc客户端
 	conf.RegisterRPCClients()
 	// 注册DI存储层实现

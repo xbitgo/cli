@@ -94,7 +94,10 @@ func (m *Manager) parsePbFile(pbFile string) []parser.INF {
 					if option.Name == "(google.api.http)" {
 						for _, literal := range option.Constant.OrderedMap {
 							if literal.Name != "" {
-								httpMethod = strings.ToUpper(literal.Name)
+								httpMethod = literal.Name
+								if literal.Name != "any" {
+									httpMethod = strings.ToUpper(literal.Name)
+								}
 								if literal.Literal != nil {
 									httpRule = literal.Literal.Source
 								}
