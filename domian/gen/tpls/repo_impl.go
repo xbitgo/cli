@@ -11,7 +11,7 @@ package repo
 import (
 	"context"
 
-	"{{.ProjectName}}/apps/demo/domain/entity"
+	"{{.ProjectName}}/apps/{{.AppName}}/domain/entity"
 	"github.com/xbitgo/components/dtx"
 	"github.com/xbitgo/components/filterx"
 )
@@ -30,10 +30,10 @@ const repoImplTpl = `package repo_impl
 import (
 	"context"
 
-	"{{.ProjectName}}/apps/demo/domain/entity"
-	"{{.ProjectName}}/apps/demo/repo_impl/converter"
-	"{{.ProjectName}}/apps/demo/repo_impl/dao"
-	"{{.ProjectName}}/apps/demo/repo_impl/do"
+	"{{.ProjectName}}/apps/{{.AppName}}/domain/entity"
+	"{{.ProjectName}}/apps/{{.AppName}}/repo_impl/converter"
+	"{{.ProjectName}}/apps/{{.AppName}}/repo_impl/dao"
+	"{{.ProjectName}}/apps/{{.AppName}}/repo_impl/do"
 
 	"github.com/xbitgo/components/database"
 	"github.com/xbitgo/components/dtx"
@@ -47,14 +47,15 @@ type {{.EntityName}}RepoImpl struct {
 }
 
 func New{{.EntityName}}RepoImpl() *{{.EntityName}}RepoImpl {
-	return &{{.EntityName}}Impl{
+	return &{{.EntityName}}RepoImpl{
 		Dao: dao.New{{.EntityName}}Dao(),
 	}
 }
 
 func (impl *{{.EntityName}}RepoImpl) Get(ctx context.Context, id int64) (*entity.{{.EntityName}}, error) {
 	session := impl.DB.NewSession(ctx)
-	_do, err := impl.Dao.GetById(session, id)
+	session = session.Where("id = ?",id)
+	_do, err := impl.Dao.Get(session)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +101,8 @@ func (impl *{{.EntityName}}RepoImpl) UpdateById(ctx context.Context, updates dtx
 		return err
 	}
 	session := impl.DB.NewSession(ctx)
-	err = impl.Dao.UpdateById(session, _updates, id)
+	session = session.Where("id = ?",id)
+	err = impl.Dao.Update(session, _updates)
 	if err != nil {
 		return err
 	}
@@ -109,7 +111,8 @@ func (impl *{{.EntityName}}RepoImpl) UpdateById(ctx context.Context, updates dtx
 
 func (impl *{{.EntityName}}RepoImpl) DeleteById(ctx context.Context, id int64) error {
 	session := impl.DB.NewSession(ctx)
-	err = impl.Dao.DeleteById(session, id)
+	session = session.Where("id = ?",id)
+	err := impl.Dao.Delete(session)
 	if err != nil {
 		return err
 	}
@@ -119,6 +122,7 @@ func (impl *{{.EntityName}}RepoImpl) DeleteById(ctx context.Context, id int64) e
 
 type Repo struct {
 	ProjectName string
+	AppName     string
 	EntityName  string
 }
 

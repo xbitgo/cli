@@ -28,6 +28,7 @@ func (m *Manager) CRepo() error {
 	for _, s := range entityList {
 		tpl := tpls.Repo{
 			ProjectName: conf.Global.ProjectName,
+			AppName:     m.AppName,
 			EntityName:  s,
 		}
 		buf, err := tpl.Execute()
