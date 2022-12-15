@@ -12,7 +12,7 @@ package {{.Package}};
 
 import "google/api/gogo.proto";
 
-option go_package = "{{.PackagePath}};{{.Package}}";
+option go_package = "{{.ProjectName}}/{{.PackagePath}};{{.Package}}";
 
 {{ range .MessageList }}
 message {{.Name}} {

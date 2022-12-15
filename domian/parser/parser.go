@@ -10,6 +10,7 @@ const (
 	STypeStruct = 1
 	STypeSlice  = 2
 	STypeMap    = 3
+	STypeTime   = 4
 )
 
 type IParser struct {

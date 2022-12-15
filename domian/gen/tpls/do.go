@@ -12,6 +12,7 @@ import (
 {{- range .Imports}}
 	"{{.}}"
 {{- end}}
+	"gorm.io/gorm"
 )
 {{end}}
 
@@ -23,6 +24,7 @@ type {{.Name}}Do struct {
 	{{.Name}} {{.Type}} {{.Tag}} // {{.Comment}}
 	{{- end}}
 {{- end}}
+	DeletedAt gorm.DeletedAt ` + "`" + `db:"deleted_at" gorm:"deleted_at"` + "`" + ` // 软删除标识
 }
 
 func (do *{{.Name}}Do) TableName() string {

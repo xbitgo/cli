@@ -19,16 +19,32 @@ import (
 
 const entityTypeDef = `
 
-func (e {{$.EntityName}}) String() string {
+func (e *{{$.EntityName}}) String() string {
 	data, _ := json.Marshal(e)
 	return string(data)
 }
 
-func (e {{$.EntityName}}) EntityName() string {
+func (e *{{$.EntityName}}) EntityName() string {
 	return "{{$.EntityName}}"
 }
 
-func (e {{$.EntityName}}) ToTagMap(tagName string) map[string]interface{} {
+func (e *{{$.EntityName}}) ModifyDBMap(e2 *{{$.EntityName}}) map[string]interface{} {
+	if e == nil || e2 == nil {
+		return nil
+	}
+	out := make(map[string]interface{})
+	{{- range $field := .Field}}
+		{{- if ne $field.DBTag ""}} 
+		if e2.{{$field.Field}} != e.{{$field.Field}} {
+			out["{{$field.DBTag}}"] = e2.{{$field.Field}}
+		}
+		{{- end}}
+		
+	{{- end}}
+	return out
+}
+
+func (e *{{$.EntityName}}) ToTagMap(tagName string) map[string]interface{} {
 	out := make(map[string]interface{})
 	v := reflect.ValueOf(e)
 	t := v.Type()
@@ -199,6 +215,7 @@ type Field struct {
 	FieldTag        string
 	FieldEscapedTag string
 	FieldTagMap     map[string]string
+	DBTag           string
 	Type            string
 	NamedType       string
 	TypeInName      string

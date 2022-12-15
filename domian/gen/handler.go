@@ -107,6 +107,10 @@ func (m *Manager) parsePbFile(pbFile string) []parser.INF {
 					}
 				}
 				if ok {
+					comment := ""
+					if r.Comment != nil {
+						comment = r.Comment.Message()
+					}
 					method := parser.XMethod{
 						ImplName: "impl",
 						Name:     r.Name,
@@ -130,7 +134,7 @@ func (m *Manager) parsePbFile(pbFile string) []parser.INF {
 								Type: "error",
 							},
 						},
-						Comment:    r.Comment.Message(),
+						Comment:    comment,
 						Sort:       idx,
 						HTTPMethod: httpMethod,
 						HTTPRule:   httpRule,

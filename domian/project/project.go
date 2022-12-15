@@ -89,7 +89,6 @@ func (p *Project) Protoc() {
 		for _, pbFile := range pbFiles {
 			gm.Client(pbFile)
 			pbFile = strings.Replace(pbFile, p.RootPath()+"/proto/", "", 1)
-			//fmt.Println(pbFile)
 			_ = gm.Protoc(pbFile)
 		}
 	}

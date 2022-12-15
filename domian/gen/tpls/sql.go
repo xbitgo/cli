@@ -11,7 +11,8 @@ CREATE TABLE {{.TableName}} (
 {{- range .Fields}}
 	{{.Name}} {{.Type}} {{.NotNull}} {{.Default}} COMMENT '{{.Comment}}',
 {{- end}}
-	PRIMARY KEY ({{.PrimaryKey}})
+	PRIMARY KEY ({{.PrimaryKey}}),
+	KEY (` + "`" + `deleted_at` + "`" + `)
 ) ENGINE={{.Engine}} DEFAULT CHARSET={{.Charset}} COLLATE={{.Collate}};
 `
 
@@ -85,6 +86,13 @@ var (
 			Default: "DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
 			Comment: "更新时间",
 			NotNull: "NOT NULL",
+		},
+		`deleted_at`: {
+			Name:    "`deleted_at`",
+			Type:    "datetime",
+			Default: "",
+			Comment: "删除时间",
+			NotNull: "NULL",
 		},
 	}
 )

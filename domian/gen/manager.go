@@ -82,11 +82,20 @@ func (m *Manager) _typedef(xst parser.XST) ([]byte, error) {
 	for _, field := range fieldList {
 		_type := field.Type
 		tags := strings.Trim(field.Tag, "`")
+		tagsMap := parseFieldTagMap(tags)
+		dbTag := tagsMap["db"]
+		if dbTag != "" && strings.Contains(dbTag, ";") {
+			dbTag = strings.Split(dbTag, ";")[0]
+		}
+		if dbTag == "create_time" || dbTag == "update_time" || dbTag == "id" {
+			dbTag = ""
+		}
 		fe := tpls.Field{
 			Field:           field.Name,
 			FieldTag:        tags,
 			FieldEscapedTag: fmt.Sprintf("%q", tags),
-			FieldTagMap:     parseFieldTagMap(tags),
+			FieldTagMap:     tagsMap,
+			DBTag:           dbTag,
 			Type:            _type,
 			NamedType:       "",
 			TypeInName:      "",
@@ -173,7 +182,7 @@ func (m *Manager) DI(iParser *parser.IParser) error {
 }
 
 func (m *Manager) Protoc(pbFile string) error {
-	cmd := exec.Command("protoc", "-I", ".", "-I", "./third_party", "--gofast_out", "../", "--go-grpc_out", "../", pbFile)
+	cmd := exec.Command("protoc", "-I", ".", "-I", "./third_party", "--gofast_out", "../../", "--go-grpc_out", "../../", pbFile)
 	cmd.Dir = m.Project.RootPath() + "/proto"
 	_, err := cmd.CombinedOutput()
 	if err != nil {

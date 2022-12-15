@@ -256,9 +256,9 @@ package {{.ServiceName}};
 
 import "google/api/annotations.proto";
 //import "google/api/gogo.proto";
-//import "{{.AppsDir}}/{{.ServiceName}}/{{.ServiceName}}_message_gen.proto";
+//import "{{.ProjectName}}/{{.AppsDir}}/{{.ServiceName}}/{{.ServiceName}}_message_gen.proto";
 
-option go_package = "proto/{{.AppsDir}}/{{.ServiceName}};{{.ServiceName}}";
+option go_package = "{{.ProjectName}}/proto/{{.AppsDir}}/{{.ServiceName}};{{.ServiceName}}";
 
 service {{.ServiceNameUF}} {
     // Test

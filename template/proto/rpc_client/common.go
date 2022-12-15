@@ -14,17 +14,17 @@ import (
 )
 
 var (
-	RpcConn = map[string]*grpc.ClientConn{}
-	From    = ""
+	rpcConn = map[string]*grpc.ClientConn{}
+	from    = ""
 )
 
-type RPCService struct {
+type gRPCService struct {
 	Name string
 	Addr string
 }
 
-func RegisterRPC(fromSrv string, etcdClient *etcd.Client, services ...RPCService) (err error) {
-	From = fromSrv
+func RegisterRPC(fromSrv string, etcdClient *etcd.Client, services ...gRPCService) (err error) {
+	from = fromSrv
 	for _, service := range services {
 		addr := service.Addr
 		if addr == "" {
@@ -34,7 +34,7 @@ func RegisterRPC(fromSrv string, etcdClient *etcd.Client, services ...RPCService
 		if err != nil {
 			return errors.Wrap(err, "service:"+service.Name+":"+addr)
 		}
-		RpcConn[service.Name] = conn
+		rpcConn[service.Name] = conn
 	}
 	return nil
 }
