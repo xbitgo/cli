@@ -18,7 +18,9 @@ import (
 
 type {{.Name}}Do struct {
 {{- range .Fields}}
-	{{- if gt .SType 0}}
+	{{- if eq .SType 4}}
+	{{.Name}} *{{.Type}} {{.Tag}} // {{.Comment}}
+	{{- else if gt .SType 0}}
 	{{.Name}} string {{.Tag }} // {{.Comment}}
 	{{- else}}
 	{{.Name}} {{.Type}} {{.Tag}} // {{.Comment}}
@@ -108,6 +110,10 @@ func From{{.Name}}Entity(input *entity.{{.Name}}) *do.{{.Name}}Do{
 		b, _ := json.Marshal(input.{{.Name}})
 		output.{{.Name}} = string(b)
 	}
+	{{- else if eq .SType 4}}
+		if !input.{{.Name}}.IsZero() {
+			output.{{.Name}} = &input.{{.Name}}
+		}
 	{{- else}}
 	output.{{.Name}} = input.{{.Name}}
 	{{- end}}
@@ -165,7 +171,10 @@ func To{{.Name}}Entity(input *do.{{.Name}}Do) *entity.{{.Name}}{
 				output.{{.Name}} = t
 			}
 		}
-
+	{{- else if eq .SType 4}}
+		if input.{{.Name}} != nil {
+			output.{{.Name}} = *input.{{.Name}}
+		}
 	{{- else}}
 	output.{{.Name}} = input.{{.Name}}
 	{{- end}}

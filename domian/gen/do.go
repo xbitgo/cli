@@ -50,7 +50,7 @@ func (m *Manager) Do(xst parser.XST) error {
 			case 1:
 				type2 = strings.Replace(field.Type, "*", "", 1)
 				if strings.Contains(field.Type, "time.Time") {
-					field.SType = 4
+					field.SType = parser.STypeTime
 				} else {
 					if strings.Index(field.Type, "*") == 0 {
 						isPoint = true

@@ -97,13 +97,15 @@ func From{{.Name}}Entity(input *entity.{{.Name}}) *pb.{{.Name}}{
 	output.{{.NameSn}} = From{{.Type}}Entity(input.{{.Name2}})
 		{{- end}}
 	{{- else if .IsMuEntity}}
-	output.{{.NameSn}} = make({{.PbType}},len(input.{{.Name2}}))
-	for k, v := range input.{{.Name2}} {
+	if input.{{.Name2}} != nil {
+		output.{{.NameSn}} = make({{.PbType}},len(input.{{.Name2}}))
+		for k, v := range input.{{.Name2}} {
 		{{- if .NoPoint}}
 		output.{{.NameSn}}[k] = From{{.Type3}}Entity(&v)
 		{{- else}}
 		output.{{.NameSn}}[k] = From{{.Type3}}Entity(v)
 		{{- end}}
+		}
 	}
 	{{- else}}
 	{{- if .ConvType}}
@@ -144,8 +146,9 @@ func To{{.Name}}Entity(input *pb.{{.Name}}) *entity.{{.Name}}{
 	output.{{.Name2}} = To{{.Type}}Entity(input.{{.NameSn}})
 		{{- end}}
 	{{- else if .IsMuEntity}}
-	output.{{.Name2}} = make({{.EntityType}},len(input.{{.NameSn}}))
-	for k, v := range input.{{.NameSn}} {
+	if input.{{.NameSn}} != nil {
+		output.{{.Name2}} = make({{.EntityType}},len(input.{{.NameSn}}))
+		for k, v := range input.{{.NameSn}} {
 		{{- if .NoPoint}}
 		t{{.Name2}} := To{{.Type3}}Entity(v)
 		if t{{.Name2}} != nil {
@@ -154,6 +157,7 @@ func To{{.Name}}Entity(input *pb.{{.Name}}) *entity.{{.Name}}{
 		{{- else}}
 		output.{{.Name2}}[k] = To{{.Type3}}Entity(v)
 		{{- end}}
+		}
 	}
 	{{- else}}
 	{{- if .ConvType}}
