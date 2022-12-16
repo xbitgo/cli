@@ -86,9 +86,6 @@ func (m *Manager) toGenSQL(tableName string, xst parser.XST) tpls.GenSQL {
 				Comment:   field.Comment,
 				NotNull:   "NOT NULL",
 			}
-			if name == "create_time" || name == "update_time" {
-				sf.NotNull = ""
-			}
 			sFields = append(sFields, sf)
 			last = name
 		}
