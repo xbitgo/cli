@@ -182,7 +182,10 @@ func (m *Manager) DI(iParser *parser.IParser) error {
 }
 
 func (m *Manager) Protoc(pbFile string) error {
-	cmd := exec.Command("protoc", "-I", ".", "-I", "./third_party", "--gofast_out", "../../", "--go-grpc_out", "../../", pbFile)
+	cmd := exec.Command("protoc", "-I", ".", "-I", "./third_party", "--gofast_out", "../../", "--go-grpc_out", "../../", "--swagger_out=logtostderr=true:.", pbFile)
+	if strings.HasSuffix(pbFile, "_gen.proto") || strings.HasSuffix(pbFile, "/base.proto") {
+		cmd = exec.Command("protoc", "-I", ".", "-I", "./third_party", "--gofast_out", "../../", "--go-grpc_out", "../../", pbFile)
+	}
 	cmd.Dir = m.Project.RootPath() + "/proto"
 	_, err := cmd.CombinedOutput()
 	if err != nil {

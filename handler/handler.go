@@ -79,6 +79,12 @@ func CmdList() []*cobra.Command {
 			Run:   cRepo,
 		},
 		{
+			Use:   "c.service",
+			Short: "根据Entity生成基本的仓库接口及实现",
+			Long:  "根据Entity生成基本的仓库接口及实现; 参数 {app}; app为应用名称 支持多个 不传默认全部应用",
+			Run:   cService,
+		},
+		{
 			Use:   "do2Sql",
 			Short: "根据Do生成对应数据表创建/新增SQL",
 			Long:  "根据Do生成对应数据表创建/新增SQL; 参数 {app}; app为应用名称 支持多个 不传默认全部应用",
@@ -169,6 +175,15 @@ func cRepo(cmd *cobra.Command, args []string) {
 		log.Fatalf("请输入正确的应用名! ")
 	}
 	p.CRepo()
+}
+
+func cService(cmd *cobra.Command, args []string) {
+	p := project.NewProject(pwd)
+	num := p.SetActiveApps(args...)
+	if num == 0 {
+		log.Fatalf("请输入正确的应用名! ")
+	}
+	p.CService()
 }
 
 func do2Sql(cmd *cobra.Command, args []string) {

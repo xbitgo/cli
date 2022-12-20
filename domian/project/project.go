@@ -124,6 +124,15 @@ func (p *Project) CRepo() {
 	}
 }
 
+// CService 生成
+func (p *Project) CService() {
+	for _, actApp := range p.activeApps {
+		if err := actApp.CService(); err != nil {
+			log.Panicf("Impl app[%s] err: %v", actApp.Name, err)
+		}
+	}
+}
+
 // Handler 生成
 func (p *Project) Handler() {
 	for _, actApp := range p.activeApps {

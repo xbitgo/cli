@@ -54,6 +54,11 @@ func (a *App) CRepo() error {
 	return gm.CRepo()
 }
 
+func (a *App) CService() error {
+	gm := gen.NewManager(a.Tmpl, a.Name, a.Pwd)
+	return gm.CService()
+}
+
 func (a *App) Handler() error {
 	gm := gen.NewManager(a.Tmpl, a.Name, a.Pwd)
 	return gm.Handler()
