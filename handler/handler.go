@@ -80,9 +80,15 @@ func CmdList() []*cobra.Command {
 		},
 		{
 			Use:   "c.service",
-			Short: "根据Entity生成基本的仓库接口及实现",
-			Long:  "根据Entity生成基本的仓库接口及实现; 参数 {app}; app为应用名称 支持多个 不传默认全部应用",
+			Short: "根据Entity生成基本的Service实现",
+			Long:  "根据Entity生成基本的Service实现; 参数 {app}; app为应用名称 支持多个 不传默认全部应用",
 			Run:   cService,
+		},
+		{
+			Use:   "c.handler",
+			Short: "根据Entity生成基本的接口定义及实现",
+			Long:  "根据Entity生成基本的接口定义及实现; 参数 {app}; app为应用名称 支持多个 不传默认全部应用",
+			Run:   cHandler,
 		},
 		{
 			Use:   "do2Sql",
@@ -184,6 +190,14 @@ func cService(cmd *cobra.Command, args []string) {
 		log.Fatalf("请输入正确的应用名! ")
 	}
 	p.CService()
+}
+func cHandler(cmd *cobra.Command, args []string) {
+	p := project.NewProject(pwd)
+	num := p.SetActiveApps(args...)
+	if num == 0 {
+		log.Fatalf("请输入正确的应用名! ")
+	}
+	p.CHandler()
 }
 
 func do2Sql(cmd *cobra.Command, args []string) {

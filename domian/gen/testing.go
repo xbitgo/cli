@@ -53,7 +53,7 @@ func (m *Manager) TestHandlers() error {
 	return nil
 }
 
-func (m Manager) _testHandler(inf parser.INF) (tpls.TestingHandler, error) {
+func (m *Manager) _testHandler(inf parser.INF) (tpls.TestingHandler, error) {
 	tplHandler := m.toHandlerGen(inf)
 	tplHandlerTesting := tpls.TestingHandler{
 		ProjectName: conf.Global.ProjectName,

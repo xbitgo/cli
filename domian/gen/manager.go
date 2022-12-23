@@ -87,7 +87,7 @@ func (m *Manager) _typedef(xst parser.XST) ([]byte, error) {
 		if dbTag != "" && strings.Contains(dbTag, ";") {
 			dbTag = strings.Split(dbTag, ";")[0]
 		}
-		if dbTag == "create_time" || dbTag == "update_time" || dbTag == "id" {
+		if dbTag == "create_time" || dbTag == "update_time" || dbTag == "id" || dbTag == "deleted_at" {
 			dbTag = ""
 		}
 		fe := tpls.Field{

@@ -81,7 +81,7 @@ func (p *Project) Protoc() {
 	gm := gen.NewManager(conf.Global.Tmpl, "", "")
 	// 生成pb文件和grpc client
 	dirs := []string{
-		p.RootPath() + "/proto/base",
+		p.RootPath() + "/proto/common",
 		p.RootPath() + "/proto/apps",
 	}
 	for _, dir := range dirs {
@@ -128,6 +128,15 @@ func (p *Project) CRepo() {
 func (p *Project) CService() {
 	for _, actApp := range p.activeApps {
 		if err := actApp.CService(); err != nil {
+			log.Panicf("Impl app[%s] err: %v", actApp.Name, err)
+		}
+	}
+}
+
+// CHandler 生成
+func (p *Project) CHandler() {
+	for _, actApp := range p.activeApps {
+		if err := actApp.CHandler(); err != nil {
 			log.Panicf("Impl app[%s] err: %v", actApp.Name, err)
 		}
 	}

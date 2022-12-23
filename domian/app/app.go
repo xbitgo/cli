@@ -59,6 +59,11 @@ func (a *App) CService() error {
 	return gm.CService()
 }
 
+func (a *App) CHandler() error {
+	gm := gen.NewManager(a.Tmpl, a.Name, a.Pwd)
+	return gm.CHandler()
+}
+
 func (a *App) Handler() error {
 	gm := gen.NewManager(a.Tmpl, a.Name, a.Pwd)
 	return gm.Handler()

@@ -28,8 +28,8 @@ func (e *{{$.EntityName}}) EntityName() string {
 	return "{{$.EntityName}}"
 }
 
-func (e *{{$.EntityName}}) ModifyDBMap(e2 *{{$.EntityName}}) map[string]interface{} {
-	if e == nil || e2 == nil {
+func (e *{{$.EntityName}}) ModifyDBMap(e2 *{{$.EntityName}},fields []string) map[string]interface{} {
+	if e == nil || e2 == nil || fields == nil {
 		return nil
 	}
 	out := make(map[string]interface{})
@@ -41,7 +41,13 @@ func (e *{{$.EntityName}}) ModifyDBMap(e2 *{{$.EntityName}}) map[string]interfac
 		{{- end}}
 		
 	{{- end}}
-	return out
+	output := make(map[string]interface{})
+	for _, field := range fields {
+		if v, ok := out[field]; ok {
+			output[field] = v
+		}
+	}
+	return output
 }
 
 func (e *{{$.EntityName}}) ToTagMap(tagName string) map[string]interface{} {
